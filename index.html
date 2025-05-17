@@ -19,6 +19,7 @@
     #scanResult {
       margin-top: 15px;
       font-weight: bold;
+      word-break: break-word;
     }
     .valid {
       color: green;
@@ -106,6 +107,10 @@
     });
 
     stopBtn.addEventListener('click', () => {
+      stopScanning("Scan dihentikan.");
+    });
+
+    function stopScanning(message) {
       scanning = false;
       startBtn.disabled = false;
       stopBtn.disabled = true;
@@ -114,8 +119,10 @@
         videoStream.getTracks().forEach(track => track.stop());
         video.srcObject = null;
       }
-      scanResult.textContent = 'Scan dihentikan.';
-    });
+      if(message) {
+        scanResult.textContent = message;
+      }
+    }
 
     function scanQRCode() {
       if (!scanning) return;
@@ -130,30 +137,46 @@
       const code = jsQR(imageData.data, canvas.width, canvas.height);
 
       if (code) {
-        scanning = false;
-        clearInterval(scanInterval);
-        stopBtn.disabled = true;
-        startBtn.disabled = false;
-        if (videoStream) {
-          videoStream.getTracks().forEach(track => track.stop());
-          video.srcObject = null;
-        }
+        const qrDataRaw = code.data;
+        const qrData = qrDataRaw.trim();
 
-        const qrData = code.data;
+        // Debug: tampilkan di console
+        console.log("QR Code terbaca:", qrData);
+
+        // Tampilkan dulu hasil scan di layar secara langsung
+        scanResult.innerHTML = `<span>QR Code terbaca:</span><br><code>${escapeHtml(qrData)}</code>`;
+
+        // Cek apakah QR code ada di daftar valid
         const now = new Date();
-
         const qrFound = daftarQRValid.find(item => item.url === qrData);
+
         if (qrFound) {
           const expDate = new Date(qrFound.exp);
           if (now <= expDate) {
             scanResult.innerHTML = `<span class="valid">✅ QR Code valid.</span><br><a href="${qrData}" target="_blank">${qrData}</a>`;
           } else {
-            scanResult.innerHTML = `<span class="expired">⚠️ QR Code kadaluarsa pada ${qrFound.exp}</span>`;
+            scanResult.innerHTML = `<span class="expired">⚠️ QR Code kadaluarsa pada ${qrFound.exp}</span><br><a href="${qrData}" target="_blank">${qrData}</a>`;
           }
         } else {
-          scanResult.innerHTML = `<span class="error">❌ QR Code tidak terdaftar atau palsu.</span><br><code>${qrData}</code>`;
+          scanResult.innerHTML += `<br><span class="error">❌ QR Code tidak terdaftar atau palsu.</span>`;
         }
+
+        // Hentikan scanning setelah QR terbaca
+        stopScanning();
       }
+    }
+
+    // Fungsi untuk escape HTML supaya aman tampilkan kode QR
+    function escapeHtml(text) {
+      return text.replace(/[&<>"']/g, function(m) {
+        return ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        })[m];
+      });
     }
   </script>
 </body>
