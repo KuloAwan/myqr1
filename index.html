@@ -2,22 +2,22 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Scan QR Code Hotspot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scan QR Code PKBM AL SUROYA</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 20px;
+      margin: 20px;
     }
     video {
-      width: 320px;
+      width: 300px;
+      height: auto;
       border: 2px solid #20a8d8;
       border-radius: 10px;
     }
     #scanResult {
       margin-top: 15px;
-      font-size: 1.1em;
       font-weight: bold;
     }
     .valid { color: green; }
@@ -25,7 +25,7 @@
     .error { color: red; }
     button {
       padding: 10px 20px;
-      margin: 10px 5px;
+      margin: 5px;
       font-size: 16px;
       border-radius: 5px;
       border: none;
@@ -37,21 +37,30 @@
       background-color: #999;
       cursor: not-allowed;
     }
+    a {
+      display: inline-block;
+      margin-top: 10px;
+      text-decoration: none;
+      color: #20a8d8;
+      font-weight: bold;
+    }
   </style>
   <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
 </head>
 <body>
 
-  <h1>Scan QR Code Hotspot</h1>
+  <h1>SCAN QR CODE PKBM AL SUROYA</h1>
 
   <video id="video" muted playsinline></video>
 
   <div>
     <button id="startBtn">Mulai Scan</button>
-    <button id="stopBtn" disabled>Berhenti</button>
+    <button id="stopBtn" disabled>Berhenti Scan</button>
   </div>
 
   <div id="scanResult"></div>
+
+  <a href="index.html">Kembali ke Halaman Utama</a>
 
   <script>
     const video = document.getElementById('video');
@@ -60,25 +69,14 @@
     const scanResult = document.getElementById('scanResult');
 
     let videoStream = null;
-    let scanInterval = null;
     let scanning = false;
+    let scanInterval = null;
 
-    // Daftar QR Code valid beserta tanggal kadaluarsa
+    // QR code valid & kadaluarsa
     const daftarQRValid = [
       { url: "http://njajal.com/login?username=WUJW&password=9434", exp: "2025-12-31" },
-      { url: "http://njajal.com/login?username=TEST&password=1234", exp: "2025-06-01" }
+      { url: "http://njajal.com/login?username=TEST&password=1234", exp: "2025-05-30" }
     ];
-
-    function stopScanning() {
-      scanning = false;
-      clearInterval(scanInterval);
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-      if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        video.srcObject = null;
-      }
-    }
 
     startBtn.addEventListener('click', async () => {
       scanResult.textContent = '';
@@ -91,14 +89,27 @@
         stopBtn.disabled = false;
         scanInterval = setInterval(scanQRCode, 300);
       } catch (err) {
-        scanResult.innerHTML = `<span class="error">❌ Tidak bisa akses kamera: ${err.message}</span>`;
+        scanResult.innerHTML = `<span class="error">❌ Tidak dapat mengakses kamera: ${err.message}</span>`;
       }
     });
 
     stopBtn.addEventListener('click', stopScanning);
 
+    function stopScanning() {
+      scanning = false;
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      clearInterval(scanInterval);
+      if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+      }
+      scanResult.textContent = 'Scan dihentikan.';
+    }
+
     function scanQRCode() {
       if (!scanning) return;
+
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       canvas.width = video.videoWidth;
@@ -109,26 +120,24 @@
       const code = jsQR(imageData.data, canvas.width, canvas.height);
 
       if (code) {
-        stopScanning();
-
+        stopScanning(); // hentikan scan setelah dapat QR
         const qrData = code.data.trim();
         const now = new Date();
-        const qrFound = daftarQRValid.find(item => item.url === qrData);
+
+        // Cocokkan QR (case-insensitive)
+        const qrFound = daftarQRValid.find(item => item.url.trim().toLowerCase() === qrData.toLowerCase());
 
         if (qrFound) {
           const expDate = new Date(qrFound.exp);
           if (now <= expDate) {
-            // ✅ QR valid dan belum expired → redirect langsung ke login
-            scanResult.innerHTML = `<span class="valid">✅ QR Code valid, sedang mengalihkan...</span>`;
+            scanResult.innerHTML = `<span class="valid">✅ QR Code valid. Login sedang diproses...</span>`;
             setTimeout(() => {
-              window.location.href = qrData;
-            }, 1000); // delay sedikit agar user tahu sedang redirect
+              window.location.href = qrData; // Redirect otomatis
+            }, 1500);
           } else {
-            // ⚠️ QR expired
             scanResult.innerHTML = `<span class="expired">⚠️ QR Code kadaluarsa pada ${qrFound.exp}</span>`;
           }
         } else {
-          // ❌ QR tidak terdaftar
           scanResult.innerHTML = `<span class="error">❌ QR Code tidak terdaftar atau palsu.</span>`;
         }
       }
