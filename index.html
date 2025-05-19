@@ -2,150 +2,163 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Scan QR Code PKBM AL SUROYA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MIKHMON QR CODE SCANNER</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      color: #000000;
       text-align: center;
-      margin: 20px;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
     }
-    video {
+    img.logo {
+      width: 100px;
+      margin-top: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      margin: 10px 0;
+      color: #20a8d8;
+    }
+    p {
+      font-size: 14px;
+      margin: 5px 0;
+    }
+    .btn-container {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .btn {
+      padding: 10px 20px;
+      background-color: #20a8d8;
+      color: #ffffff;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      margin: 0 10px;
+    }
+    .upload-frame, .result-frame {
       width: 300px;
-      height: auto;
       border: 2px solid #20a8d8;
       border-radius: 10px;
+      margin: 20px auto;
+      padding: 20px;
+      text-align: center;
+      display: none;
     }
-    #scanResult {
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    .valid {
-      color: green;
-    }
-    .error {
-      color: red;
-    }
-    button {
-      padding: 10px 20px;
-      margin: 5px;
-      font-size: 16px;
-      border-radius: 5px;
-      border: none;
-      background-color: #20a8d8;
-      color: white;
-      cursor: pointer;
-    }
-    button:disabled {
-      background-color: #999;
-      cursor: not-allowed;
-    }
-    a {
-      display: inline-block;
+    .uploaded-image {
       margin-top: 10px;
-      text-decoration: none;
-      color: #20a8d8;
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #20a8d8;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .result {
+      margin-top: 20px;
       font-weight: bold;
     }
+    .valid { color: green; }
+    .error { color: red; }
   </style>
-  <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
 </head>
 <body>
+  <center>
+    <img src="images/logo.png" alt="Logo" class="logo">
+    <h1>PKBM AL-SUROYA</h1>
+    <p>jalan Selagi, Gang Parto, No. 11, Iringmulyo, Kec. Metro Timur, Kota Metro</p>
 
-  <h1>SCAN QR CODE PKBM AL SUROYA</h1>
+    <div class="btn-container">
+      <button class="btn" onclick="toggleUploadFrame()">Upload QR Code</button>
+    </div>
 
-  <video id="video" muted playsinline></video>
+    <div class="btn-container">
+      <a href="scan.html" class="btn">Scan QR via Kamera</a>
+    </div>
 
-  <div>
-    <button id="startBtn">Mulai Scan</button>
-    <button id="stopBtn" disabled>Berhenti Scan</button>
-  </div>
+    <div class="btn-container">
+      <a href="https://wa.me/6285789493778?text=Halo%2C%20saya%20perlu%20bantuan%20terkait%20layanan%20jaringan%20PKBM%20AL%20SUROYA" target="_blank">
+        <button class="btn">Bantuan</button>
+      </a>
+    </div>
 
-  <div id="scanResult"></div>
+    <div class="upload-frame" id="uploadFrame">
+      <p>Upload QR Code di sini</p>
+      <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this)">
+      <img id="uploadedImage" class="uploaded-image" style="display:none;">
+    </div>
 
-  <a href="index.html">Kembali ke Halaman Utama</a>
+    <div class="result-frame" id="resultFrame">
+      <h2>Hasil Pemindaian</h2>
+      <div class="result" id="scanResult"></div>
+    </div>
+  </center>
 
   <script>
-    const video = document.getElementById('video');
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const scanResult = document.getElementById('scanResult');
-
-    let videoStream = null;
-    let scanning = false;
-    let scanInterval = null;
-
-    startBtn.addEventListener('click', async () => {
-      scanResult.textContent = '';
-      try {
-        videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        video.srcObject = videoStream;
-        video.play();
-        scanning = true;
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-        scanInterval = setInterval(scanQRCode, 300);
-      } catch (err) {
-        scanResult.innerHTML = `<span class="error">❌ Tidak dapat mengakses kamera: ${err.message}</span>`;
-      }
-    });
-
-    stopBtn.addEventListener('click', stopScan);
-
-    function stopScan() {
-      scanning = false;
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-      clearInterval(scanInterval);
-      if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        video.srcObject = null;
-      }
-      scanResult.textContent = 'Scan dihentikan.';
+    function toggleUploadFrame() {
+      const uploadFrame = document.getElementById("uploadFrame");
+      uploadFrame.style.display = uploadFrame.style.display === "none" || uploadFrame.style.display === "" ? "block" : "none";
+      document.getElementById("scanResult").innerText = '';
+      document.getElementById("resultFrame").style.display = "none";
+      document.getElementById("uploadedImage").style.display = "none";
+      document.getElementById("fileInput").value = '';
     }
 
-    function parseLoginData(url) {
-      try {
-        const u = new URL(url);
-        const username = u.searchParams.get("username");
-        const password = u.searchParams.get("password");
-        return { username, password };
-      } catch {
-        return null;
-      }
-    }
+    function handleFile(input) {
+      const file = input.files[0];
+      const uploadedImage = document.getElementById("uploadedImage");
+      const scanResult = document.getElementById("scanResult");
+      const resultFrame = document.getElementById("resultFrame");
 
-    function scanQRCode() {
-      if (!scanning) return;
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          uploadedImage.src = event.target.result;
+          uploadedImage.style.display = 'block';
 
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imgElement = new Image();
+          imgElement.src = event.target.result;
 
-      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, canvas.width, canvas.height);
+          imgElement.onload = function() {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = imgElement.width;
+            canvas.height = imgElement.height;
+            context.drawImage(imgElement, 0, 0);
 
-      if (code) {
-        scanning = false;
-        clearInterval(scanInterval);
-        stopScan();
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const decodedQR = jsQR(imageData.data, canvas.width, canvas.height);
 
-        const qrData = code.data.trim();
-        const login = parseLoginData(qrData);
+            if (decodedQR) {
+              const qrData = decodedQR.data;
+              if (qrData.includes("login?username=")) {
+                scanResult.innerHTML = `<span class="valid">✅ QR Code valid (dari Mikhmon)</span><br><a href="${qrData}" target="_blank">${qrData}</a>`;
+                
+                // Redirect otomatis ke URL login setelah 2 detik
+                setTimeout(() => {
+                  window.location.href = qrData;
+                }, 2000);
 
-        if (login && login.username && login.password) {
-          scanResult.innerHTML = `<span class="valid">✅ QR Code valid. Menunggu konfirmasi login...</span>`;
-          const konfirmasi = confirm("QR Code valid.\nApakah Anda ingin login sekarang?");
-          if (konfirmasi) {
-            window.location.href = qrData;
-          } else {
-            scanResult.innerHTML = `<span class="valid">✅ QR Code valid. Login dibatalkan oleh pengguna.</span>`;
-          }
-        } else {
-          scanResult.innerHTML = `<span class="error">❌ Format QR Code tidak dikenali sebagai login Mikhmon.</span>`;
-        }
+              } else {
+                scanResult.innerHTML = `<span class="error">❌ Format QR tidak dikenali sebagai login Mikhmon.</span>`;
+                // Tidak redirect
+              }
+            } else {
+              scanResult.innerHTML = '<span class="error">❌ QR Code tidak terbaca.</span>';
+              // Tidak redirect
+            }
+            resultFrame.style.display = 'block';
+          };
+        };
+        reader.readAsDataURL(file);
       }
     }
   </script>
