@@ -156,18 +156,6 @@
               setTimeout(() => {
                 window.location.href = qrData;
               }, 1500);
-            } else {
-              scanResult.innerHTML = `<span class="expired">⚠️ QR Code kadaluarsa pada ${match.exp}</span>`;
-              setTimeout(() => {
-                window.location.href = "scan.html?expired=true";
-              }, 3000);
-            }
-          } else {
-            scanResult.innerHTML = `<span class="error">❌ Username/password tidak cocok.</span>`;
-            setTimeout(() => {
-              window.location.href = "scan.html?expired=true";
-            }, 3000);
-          }
         } else {
           scanResult.innerHTML = `<span class="error">❌ Format QR code tidak dikenali.</span>`;
           setTimeout(() => {
