@@ -23,6 +23,9 @@
     .valid {
       color: green;
     }
+    .expired {
+      color: orange;
+    }
     .error {
       color: red;
     }
@@ -74,6 +77,11 @@
     let videoStream = null;
     let scanning = false;
     let scanInterval = null;
+
+    const daftarQRValid = [
+      { username: "ABC", password: "1234", exp: "2025-12-31" },
+      { username: "TEST", password: "5678", exp: "2025-06-01" }
+    ];
 
     startBtn.addEventListener('click', async () => {
       scanResult.textContent = '';
@@ -134,19 +142,45 @@
 
         const qrData = code.data.trim();
         const login = parseLoginData(qrData);
+        const now = new Date();
 
         if (login && login.username && login.password) {
-          scanResult.innerHTML = `<span class="valid">✅ QR Code valid. Menunggu konfirmasi login...</span>`;
-          const konfirmasi = confirm("QR Code valid.\nApakah Anda ingin login sekarang?");
-          if (konfirmasi) {
-            window.location.href = qrData;
+          const match = daftarQRValid.find(item =>
+            item.username === login.username && item.password === login.password
+          );
+
+          if (match) {
+            const expDate = new Date(match.exp);
+            if (now <= expDate) {
+              scanResult.innerHTML = `<span class="valid">✅ QR Code valid. Login sedang diproses...</span>`;
+              setTimeout(() => {
+                window.location.href = qrData;
+              }, 1500);
+            } else {
+              scanResult.innerHTML = `<span class="expired">⚠️ QR Code kadaluarsa pada ${match.exp}</span>`;
+              setTimeout(() => {
+                window.location.href = "scan.html?expired=true";
+              }, 3000);
+            }
           } else {
-            scanResult.innerHTML = `<span class="valid">✅ QR Code valid. Login dibatalkan oleh pengguna.</span>`;
+            scanResult.innerHTML = `<span class="error">❌ Username/password tidak cocok.</span>`;
+            setTimeout(() => {
+              window.location.href = "scan.html?expired=true";
+            }, 3000);
           }
         } else {
-          scanResult.innerHTML = `<span class="error">❌ Format QR Code tidak dikenali sebagai login Mikhmon.</span>`;
+          scanResult.innerHTML = `<span class="error">❌ Format QR code tidak dikenali.</span>`;
+          setTimeout(() => {
+            window.location.href = "scan.html?expired=true";
+          }, 3000);
         }
       }
+    }
+
+    // Tampilkan pesan jika QR sudah expired saat kembali
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('expired') === 'true') {
+      scanResult.innerHTML = `<span class="error">❌ QR Code sudah tidak bisa digunakan lagi atau telah expired.</span>`;
     }
   </script>
 </body>
