@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -74,14 +74,6 @@
     let videoStream = null;
     let scanning = false;
     let scanInterval = null;
-
-    // Tampilkan pesan jika URL punya parameter error
-    window.addEventListener('load', () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has('error')) {
-        scanResult.innerHTML = `<span class="error">❌ Login gagal. Silakan coba scan ulang QR Code.</span>`;
-      }
-    });
 
     startBtn.addEventListener('click', async () => {
       scanResult.textContent = '';
