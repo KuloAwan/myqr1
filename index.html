@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -75,6 +75,14 @@
     let scanning = false;
     let scanInterval = null;
 
+    // Tampilkan pesan jika URL punya parameter error
+    window.addEventListener('load', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('error')) {
+        scanResult.innerHTML = `<span class="error">❌ Login gagal. Silakan coba scan ulang QR Code.</span>`;
+      }
+    });
+
     startBtn.addEventListener('click', async () => {
       scanResult.textContent = '';
       try {
@@ -139,18 +147,7 @@
           scanResult.innerHTML = `<span class="valid">✅ QR Code valid. Menunggu konfirmasi login...</span>`;
           const konfirmasi = confirm("QR Code valid.\nApakah Anda ingin login sekarang?");
           if (konfirmasi) {
-            // Cek dulu URL dengan fetch HEAD
-            fetch(qrData, { method: 'HEAD' })
-              .then(response => {
-                if (response.ok) {
-                  window.location.href = qrData;
-                } else {
-                  scanResult.innerHTML = `<span class="error">❌ Gagal mengakses URL login. Status: ${response.status}</span>`;
-                }
-              })
-              .catch(() => {
-                scanResult.innerHTML = `<span class="error">❌ Tidak dapat mengakses URL login.</span>`;
-              });
+            window.location.href = qrData;
           } else {
             scanResult.innerHTML = `<span class="valid">✅ QR Code valid. Login dibatalkan oleh pengguna.</span>`;
           }
